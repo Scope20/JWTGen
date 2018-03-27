@@ -1,0 +1,76 @@
+package Essien.JWT;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import play.mvc.Result;
+import java.io.UnsupportedEncodingException;
+import java.time.Instant;
+import java.util.Date;
+import static play.mvc.Results.ok;
+
+
+public class JWTGen {
+
+    public Result buildTokenPage() {
+        String token = buildTokenOrNull();
+        return ok("Token:".concat(token));
+    }
+
+    public Result verify(String token) {
+
+        DecodedJWT decodedToken = verifyTokenOrNull(token);
+        if (decodedToken == null) {
+
+            // Error validating token
+            return ok("token error");
+        }
+
+        // Do something with the token
+        return ok("Token Validated");
+    }
+
+    private DecodedJWT verifyTokenOrNull(String token) {
+
+        //validate token
+        try {
+            Algorithm algorithm = Algorithm.HMAC256("Yn2kjibddFAWtnPJ2AFlL8WXmohJMCvigQggaEypa5E=");
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer("mymhealth")
+                    .build();
+            return verifier.verify(token);
+        } catch (JWTVerificationException exception) {
+
+            //Invalid signature/claims
+            return null;
+        } catch (UnsupportedEncodingException exception) {
+
+            //UTF-8 encoding not supported
+            return null;
+        }
+    }
+
+    private String buildTokenOrNull() {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256("Yn2kjibddFAWtnPJ2AFlL8WXmohJMCvigQggaEypa5E=");
+            return JWT.create()
+                    .withIssuer("mymhealth")
+                    .withJWTId("tkn_id_91266")
+                    .withSubject("patient enrollment")
+                    .withIssuedAt(Date.from(Instant.now()))
+                    .withNotBefore(Date.from(Instant.now()))
+                    .sign(algorithm);
+
+        } catch (JWTCreationException exception) {
+            //Invalid Signing configuration / Couldn't convert Claims.
+            return null;
+        } catch (UnsupportedEncodingException exception) {
+            //UTF-8 encoding not supported
+            return null;
+        }
+    }
+}
+
